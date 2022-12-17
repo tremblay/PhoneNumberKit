@@ -784,7 +784,7 @@ open class PhoneNumberTextField: NSTextField, NSTextFieldDelegate {
     func setup() {
 //        self.autocorrectionType = .no
         super.delegate = self
-//        self.formatter = PhoneNumberTextFieldFormatter(isPartialFormatterEnabled: isPartialFormatterEnabled, partialFormatter: partialFormatter)
+        self.formatter = PhoneNumberTextFieldFormatter(isPartialFormatterEnabled: isPartialFormatterEnabled, partialFormatter: partialFormatter)
     }
 
     func internationalPrefix(for countryCode: String) -> String? {
@@ -1091,40 +1091,40 @@ class PhoneNumberTextFieldFormatter: Foundation.Formatter {
         fatalError("init(coder:) has not been implemented")
     }
 
-    override func isPartialStringValid(_ partialString: AutoreleasingUnsafeMutablePointer<NSString>, proposedSelectedRange: NSRangePointer?,
-                                       originalString string: String, originalSelectedRange range: NSRange,
-                                       errorDescription error: AutoreleasingUnsafeMutablePointer<NSString?>?) -> Bool {
-        // This allows for the case when a user autocompletes a phone number:
-        if range == NSRange(location: 0, length: 0) && string.isBlank {
-            return true
-        }
-
-        guard self.isPartialFormatterEnabled else {
-            return true
-        }
-
-        guard let proposedSelectedRange = proposedSelectedRange?.pointee else {
-            return false
-        }
-
-        let textAsNSString = string as NSString
-        let changedRange = textAsNSString.substring(with: proposedSelectedRange) as NSString
-        let modifiedTextField = textAsNSString.replacingCharacters(in: proposedSelectedRange, with: partialString.pointee as String)
-
-        let filteredCharacters = modifiedTextField.filter {
-            String($0).rangeOfCharacter(from: .nonNumericSet) == nil
-        }
-        let rawNumberString = String(filteredCharacters)
-
-        let formattedNationalNumber = self.partialFormatter.formatPartial(rawNumberString as String)
-
-        let nonNumericRange = (changedRange.rangeOfCharacter(from: .nonNumericSet).location != NSNotFound)
-        if range.length == 1, string.isEmpty, nonNumericRange {
-            return string == modifiedTextField
-        } else {
-            return string == formattedNationalNumber
-        }
-    }
+//    override func isPartialStringValid(_ partialString: AutoreleasingUnsafeMutablePointer<NSString>, proposedSelectedRange: NSRangePointer?,
+//                                       originalString string: String, originalSelectedRange range: NSRange,
+//                                       errorDescription error: AutoreleasingUnsafeMutablePointer<NSString?>?) -> Bool {
+//        // This allows for the case when a user autocompletes a phone number:
+//        if range == NSRange(location: 0, length: 0) && string.isBlank {
+//            return true
+//        }
+//
+//        guard self.isPartialFormatterEnabled else {
+//            return true
+//        }
+//
+//        guard let proposedSelectedRange = proposedSelectedRange?.pointee else {
+//            return false
+//        }
+//
+//        let textAsNSString = string as NSString
+//        let changedRange = textAsNSString.substring(with: proposedSelectedRange) as NSString
+//        let modifiedTextField = textAsNSString.replacingCharacters(in: proposedSelectedRange, with: partialString.pointee as String)
+//
+//        let filteredCharacters = modifiedTextField.filter {
+//            String($0).rangeOfCharacter(from: .nonNumericSet) == nil
+//        }
+//        let rawNumberString = String(filteredCharacters)
+//
+//        let formattedNationalNumber = self.partialFormatter.formatPartial(rawNumberString as String)
+//
+//        let nonNumericRange = (changedRange.rangeOfCharacter(from: .nonNumericSet).location != NSNotFound)
+//        if range.length == 1, string.isEmpty, nonNumericRange {
+//            return string == modifiedTextField
+//        } else {
+//            return string == formattedNationalNumber
+//        }
+//    }
 }
 #endif
 
