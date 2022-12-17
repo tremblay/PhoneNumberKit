@@ -783,8 +783,7 @@ open class PhoneNumberTextField: NSTextField, NSTextFieldDelegate {
     func setup() {
 //        self.autocorrectionType = .no
         super.delegate = self
-        self.formatter = PhoneNumberTextFieldFormatter(isPartialFormatterEnabled: isPartialFormatterEnabled)
-//        self.formatter = PhoneNumberTextFieldFormatter(isPartialFormatterEnabled: isPartialFormatterEnabled, partialFormatter: partialFormatter)
+        self.formatter = PhoneNumberTextFieldFormatter(isPartialFormatterEnabled: isPartialFormatterEnabled, partialFormatter: partialFormatter)
     }
 
     func internationalPrefix(for countryCode: String) -> String? {
@@ -1078,17 +1077,25 @@ open class PhoneNumberTextField: NSTextField, NSTextFieldDelegate {
 
 class PhoneNumberTextFieldFormatter: Foundation.Formatter {
     let isPartialFormatterEnabled: Bool
-//    let partialFormatter: PartialFormatter
-//
-//    init(isPartialFormatterEnabled: Bool, partialFormatter: PartialFormatter) {
-//        self.isPartialFormatterEnabled = isPartialFormatterEnabled
-//        self.partialFormatter = partialFormatter
-//        super.init()
-//    }
+    let partialFormatter: PartialFormatter
 
-    init(isPartialFormatterEnabled: Bool) {
+    init(isPartialFormatterEnabled: Bool, partialFormatter: PartialFormatter) {
         self.isPartialFormatterEnabled = isPartialFormatterEnabled
+        self.partialFormatter = partialFormatter
         super.init()
+    }
+
+    override func string(for obj: Any?) -> String? {
+        if let string = obj as? String {
+            // TODO: format the string
+            return string
+        }
+        return nil
+    }
+
+    override func getObjectValue(_ obj: AutoreleasingUnsafeMutablePointer<AnyObject?>?, for string: String, errorDescription error: AutoreleasingUnsafeMutablePointer<NSString?>?) -> Bool {
+//        obj?.pointee = string.formatted as AnyObject
+        return true
     }
 
     required init?(coder: NSCoder) {
@@ -1119,17 +1126,14 @@ class PhoneNumberTextFieldFormatter: Foundation.Formatter {
             String($0).rangeOfCharacter(from: .nonNumericSet) == nil
         }
 
-        return filteredCharacters == string.filter {
-            String($0).rangeOfCharacter(from: .nonNumericSet) == nil
+        let formattedNationalNumber = self.partialFormatter.formatPartial(filteredCharacters)
+
+        let nonNumericRange = (changedRange.rangeOfCharacter(from: .nonNumericSet).location != NSNotFound)
+        if range.length == 1, string.isEmpty, nonNumericRange {
+            return string == modifiedTextField
+        } else {
+            return string == formattedNationalNumber
         }
-//        let formattedNationalNumber = self.partialFormatter.formatPartial(filteredCharacters)
-//
-//        let nonNumericRange = (changedRange.rangeOfCharacter(from: .nonNumericSet).location != NSNotFound)
-//        if range.length == 1, string.isEmpty, nonNumericRange {
-//            return string == modifiedTextField
-//        } else {
-//            return string == formattedNationalNumber
-//        }
     }
 }
 #endif
