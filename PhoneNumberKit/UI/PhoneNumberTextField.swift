@@ -437,9 +437,8 @@ open class PhoneNumberTextField: UITextField, UITextFieldDelegate {
         let filteredCharacters = modifiedTextField.filter {
             String($0).rangeOfCharacter(from: .nonNumericSet) == nil
         }
-        let rawNumberString = String(filteredCharacters)
 
-        let formattedNationalNumber = self.partialFormatter.formatPartial(rawNumberString as String)
+        let formattedNationalNumber = self.partialFormatter.formatPartial(filteredCharacters)
         var selectedTextRange: NSRange?
 
         let nonNumericRange = (changedRange.rangeOfCharacter(from: .nonNumericSet).location != NSNotFound)
@@ -784,7 +783,8 @@ open class PhoneNumberTextField: NSTextField, NSTextFieldDelegate {
     func setup() {
 //        self.autocorrectionType = .no
         super.delegate = self
-        self.formatter = PhoneNumberTextFieldFormatter(isPartialFormatterEnabled: isPartialFormatterEnabled, partialFormatter: partialFormatter)
+        self.formatter = PhoneNumberTextFieldFormatter(isPartialFormatterEnabled: isPartialFormatterEnabled)
+//        self.formatter = PhoneNumberTextFieldFormatter(isPartialFormatterEnabled: isPartialFormatterEnabled, partialFormatter: partialFormatter)
     }
 
     func internationalPrefix(for countryCode: String) -> String? {
@@ -967,9 +967,8 @@ open class PhoneNumberTextField: NSTextField, NSTextFieldDelegate {
 //        let filteredCharacters = modifiedTextField.filter {
 //            String($0).rangeOfCharacter(from: .nonNumericSet) == nil
 //        }
-//        let rawNumberString = String(filteredCharacters)
 //
-//        let formattedNationalNumber = self.partialFormatter.formatPartial(rawNumberString as String)
+//        let formattedNationalNumber = self.partialFormatter.formatPartial(filteredCharacters)
 //        var selectedTextRange: NSRange?
 //
 //        let nonNumericRange = (changedRange.rangeOfCharacter(from: .nonNumericSet).location != NSNotFound)
@@ -1079,11 +1078,16 @@ open class PhoneNumberTextField: NSTextField, NSTextFieldDelegate {
 
 class PhoneNumberTextFieldFormatter: Foundation.Formatter {
     let isPartialFormatterEnabled: Bool
-    let partialFormatter: PartialFormatter
+//    let partialFormatter: PartialFormatter
+//
+//    init(isPartialFormatterEnabled: Bool, partialFormatter: PartialFormatter) {
+//        self.isPartialFormatterEnabled = isPartialFormatterEnabled
+//        self.partialFormatter = partialFormatter
+//        super.init()
+//    }
 
-    init(isPartialFormatterEnabled: Bool, partialFormatter: PartialFormatter) {
+    init(isPartialFormatterEnabled: Bool) {
         self.isPartialFormatterEnabled = isPartialFormatterEnabled
-        self.partialFormatter = partialFormatter
         super.init()
     }
 
@@ -1091,32 +1095,34 @@ class PhoneNumberTextFieldFormatter: Foundation.Formatter {
         fatalError("init(coder:) has not been implemented")
     }
 
-//    override func isPartialStringValid(_ partialString: AutoreleasingUnsafeMutablePointer<NSString>, proposedSelectedRange: NSRangePointer?,
-//                                       originalString string: String, originalSelectedRange range: NSRange,
-//                                       errorDescription error: AutoreleasingUnsafeMutablePointer<NSString?>?) -> Bool {
-//        // This allows for the case when a user autocompletes a phone number:
-//        if range == NSRange(location: 0, length: 0) && string.isBlank {
-//            return true
-//        }
-//
-//        guard self.isPartialFormatterEnabled else {
-//            return true
-//        }
-//
-//        guard let proposedSelectedRange = proposedSelectedRange?.pointee else {
-//            return false
-//        }
-//
-//        let textAsNSString = string as NSString
-//        let changedRange = textAsNSString.substring(with: proposedSelectedRange) as NSString
-//        let modifiedTextField = textAsNSString.replacingCharacters(in: proposedSelectedRange, with: partialString.pointee as String)
-//
-//        let filteredCharacters = modifiedTextField.filter {
-//            String($0).rangeOfCharacter(from: .nonNumericSet) == nil
-//        }
-//        let rawNumberString = String(filteredCharacters)
-//
-//        let formattedNationalNumber = self.partialFormatter.formatPartial(rawNumberString as String)
+    override func isPartialStringValid(_ partialString: AutoreleasingUnsafeMutablePointer<NSString>, proposedSelectedRange: NSRangePointer?,
+                                       originalString string: String, originalSelectedRange range: NSRange,
+                                       errorDescription error: AutoreleasingUnsafeMutablePointer<NSString?>?) -> Bool {
+        // This allows for the case when a user autocompletes a phone number:
+        if range == NSRange(location: 0, length: 0) && string.isBlank {
+            return true
+        }
+
+        guard self.isPartialFormatterEnabled else {
+            return true
+        }
+
+        guard let proposedSelectedRange = proposedSelectedRange?.pointee else {
+            return false
+        }
+
+        let textAsNSString = string as NSString
+        let changedRange = textAsNSString.substring(with: proposedSelectedRange) as NSString
+        let modifiedTextField = textAsNSString.replacingCharacters(in: proposedSelectedRange, with: partialString.pointee as String)
+
+        let filteredCharacters = modifiedTextField.filter {
+            String($0).rangeOfCharacter(from: .nonNumericSet) == nil
+        }
+
+        return filteredCharacters == string.filter {
+            String($0).rangeOfCharacter(from: .nonNumericSet) == nil
+        }
+//        let formattedNationalNumber = self.partialFormatter.formatPartial(filteredCharacters)
 //
 //        let nonNumericRange = (changedRange.rangeOfCharacter(from: .nonNumericSet).location != NSNotFound)
 //        if range.length == 1, string.isEmpty, nonNumericRange {
@@ -1124,7 +1130,7 @@ class PhoneNumberTextFieldFormatter: Foundation.Formatter {
 //        } else {
 //            return string == formattedNationalNumber
 //        }
-//    }
+    }
 }
 #endif
 
