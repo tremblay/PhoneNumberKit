@@ -1094,7 +1094,7 @@ class PhoneNumberTextFieldFormatter: Foundation.Formatter {
     }
 
     override func getObjectValue(_ obj: AutoreleasingUnsafeMutablePointer<AnyObject?>?, for string: String, errorDescription error: AutoreleasingUnsafeMutablePointer<NSString?>?) -> Bool {
-//        obj?.pointee = string.formatted as AnyObject
+        obj?.pointee = string as AnyObject // TODO: format the string
         return true
     }
 
