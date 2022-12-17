@@ -783,7 +783,7 @@ open class PhoneNumberTextField: NSTextField, NSTextFieldDelegate {
     func setup() {
 //        self.autocorrectionType = .no
         super.delegate = self
-        self.formatter = PhoneNumberTextFieldFormatter(isPartialFormatterEnabled: isPartialFormatterEnabled, partialFormatter: partialFormatter)
+//        self.formatter = PhoneNumberTextFieldFormatter(isPartialFormatterEnabled: isPartialFormatterEnabled, partialFormatter: partialFormatter)
     }
 
     func internationalPrefix(for countryCode: String) -> String? {
@@ -953,7 +953,7 @@ open class PhoneNumberTextField: NSTextField, NSTextFieldDelegate {
     }
 
     public func controlTextDidChange(_ obj: Notification) {
-        guard let textField = obj.object as? NSTextField else { return }
+        guard let textField = obj.object as? NSTextField, let range = (obj.userInfo?["NSFieldEditor"] as? NSTextView)?.rangeForUserTextChange else { return }
 
         self._delegate?.controlTextDidChange?(obj)
 
@@ -963,11 +963,11 @@ open class PhoneNumberTextField: NSTextField, NSTextFieldDelegate {
 //        let changedRange = textAsNSString.substring(with: range) as NSString
 //        let modifiedTextField = textAsNSString.replacingCharacters(in: range, with: string)
 //
-//        let filteredCharacters = modifiedTextField.filter {
-//            String($0).rangeOfCharacter(from: .nonNumericSet) == nil
-//        }
-//
-//        let formattedNationalNumber = self.partialFormatter.formatPartial(filteredCharacters)
+        let filteredCharacters = textField.stringValue.filter {
+            String($0).rangeOfCharacter(from: .nonNumericSet) == nil
+        }
+
+        let formattedNationalNumber = self.partialFormatter.formatPartial(filteredCharacters)
 //        var selectedTextRange: NSRange?
 //
 //        let nonNumericRange = (changedRange.rangeOfCharacter(from: .nonNumericSet).location != NSNotFound)
@@ -976,7 +976,7 @@ open class PhoneNumberTextField: NSTextField, NSTextFieldDelegate {
 //            textField.stringValue = modifiedTextField
 //        } else {
 //            selectedTextRange = self.selectionRangeForNumberReplacement(textField: textField, formattedText: formattedNationalNumber)
-//            textField.stringValue = formattedNationalNumber
+            textField.stringValue = formattedNationalNumber
 //        }
 ////        sendActions(for: .editingChanged)
 //        if let selectedTextRange = currentEditor()?.selectedRange, let selectionRangePosition = textField.position(from: beginningOfDocument, offset: selectedTextRange.location) {
@@ -1114,25 +1114,17 @@ class PhoneNumberTextFieldFormatter: Foundation.Formatter {
             return true
         }
 
-        guard let proposedSelectedRange = proposedSelectedRange?.pointee else {
-            return false
-        }
+        let text = partialString.pointee as String
 
-        let textAsNSString = string as NSString
-        let changedRange = textAsNSString.substring(with: proposedSelectedRange) as NSString
-        let modifiedTextField = textAsNSString.replacingCharacters(in: proposedSelectedRange, with: partialString.pointee as String)
-
-        let filteredCharacters = modifiedTextField.filter {
-            String($0).rangeOfCharacter(from: .nonNumericSet) == nil
-        }
-
-        let formattedNationalNumber = self.partialFormatter.formatPartial(filteredCharacters)
-
-        let nonNumericRange = (changedRange.rangeOfCharacter(from: .nonNumericSet).location != NSNotFound)
-        if range.length == 1, string.isEmpty, nonNumericRange {
-            return string == modifiedTextField
+        if string.count > text.count { // backspacing
+            return true
         } else {
-            return string == formattedNationalNumber
+            let filteredCharacters = text.filter {
+                String($0).rangeOfCharacter(from: .nonNumericSet) == nil
+            }
+
+            let formattedNationalNumber = self.partialFormatter.formatPartial(filteredCharacters)
+            return text == formattedNationalNumber
         }
     }
 }
