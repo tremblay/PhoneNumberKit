@@ -150,14 +150,6 @@ open class PhoneNumberTextField: UITextField, UITextFieldDelegate {
         withPrefix: withPrefix
     )
 
-    let nonNumericSet: CharacterSet = {
-        var mutableSet = CharacterSet.decimalDigits.inverted
-        mutableSet.remove(charactersIn: PhoneNumberConstants.plusChars)
-        mutableSet.remove(charactersIn: PhoneNumberConstants.pausesAndWaitsChars)
-        mutableSet.remove(charactersIn: PhoneNumberConstants.operatorChars)
-        return mutableSet
-    }()
-
     private weak var _delegate: UITextFieldDelegate?
 
     open override var delegate: UITextFieldDelegate? {
@@ -385,7 +377,7 @@ open class PhoneNumberTextField: UITextField, UITextFieldDelegate {
         for i in cursorEnd..<textAsNSString.length {
             let cursorRange = NSRange(location: i, length: 1)
             let candidateNumberAfterCursor: NSString = textAsNSString.substring(with: cursorRange) as NSString
-            if candidateNumberAfterCursor.rangeOfCharacter(from: self.nonNumericSet).location == NSNotFound {
+            if candidateNumberAfterCursor.rangeOfCharacter(from: .nonNumericSet).location == NSNotFound {
                 for j in cursorRange.location..<textAsNSString.length {
                     let candidateCharacter = textAsNSString.substring(with: NSRange(location: j, length: 1))
                     if candidateCharacter == candidateNumberAfterCursor as String {
@@ -443,14 +435,14 @@ open class PhoneNumberTextField: UITextField, UITextFieldDelegate {
         let modifiedTextField = textAsNSString.replacingCharacters(in: range, with: string)
 
         let filteredCharacters = modifiedTextField.filter {
-            String($0).rangeOfCharacter(from: (textField as! PhoneNumberTextField).nonNumericSet) == nil
+            String($0).rangeOfCharacter(from: .nonNumericSet) == nil
         }
         let rawNumberString = String(filteredCharacters)
 
         let formattedNationalNumber = self.partialFormatter.formatPartial(rawNumberString as String)
         var selectedTextRange: NSRange?
 
-        let nonNumericRange = (changedRange.rangeOfCharacter(from: self.nonNumericSet).location != NSNotFound)
+        let nonNumericRange = (changedRange.rangeOfCharacter(from: .nonNumericSet).location != NSNotFound)
         if range.length == 1, string.isEmpty, nonNumericRange {
             selectedTextRange = self.selectionRangeForNumberReplacement(textField: textField, formattedText: modifiedTextField)
             textField.text = modifiedTextField
@@ -543,12 +535,6 @@ extension PhoneNumberTextField: CountryCodePickerDelegate {
             containingViewController?.dismiss(animated: true)
         }
     }
-}
-
-extension String {
-  var isBlank: Bool {
-    return allSatisfy({ $0.isWhitespace })
-  }
 }
 
 #elseif os(macOS)
@@ -688,14 +674,6 @@ open class PhoneNumberTextField: NSTextField, NSTextFieldDelegate {
         withPrefix: withPrefix
     )
 
-    let nonNumericSet: CharacterSet = {
-        var mutableSet = CharacterSet.decimalDigits.inverted
-        mutableSet.remove(charactersIn: PhoneNumberConstants.plusChars)
-        mutableSet.remove(charactersIn: PhoneNumberConstants.pausesAndWaitsChars)
-        mutableSet.remove(charactersIn: PhoneNumberConstants.operatorChars)
-        return mutableSet
-    }()
-
     private weak var _delegate: NSTextFieldDelegate?
 
     open override var delegate: NSTextFieldDelegate? {
@@ -806,6 +784,7 @@ open class PhoneNumberTextField: NSTextField, NSTextFieldDelegate {
     func setup() {
 //        self.autocorrectionType = .no
         super.delegate = self
+        self.formatter = PhoneNumberTextFieldFormatter(isPartialFormatterEnabled: isPartialFormatterEnabled, partialFormatter: partialFormatter)
     }
 
     func internationalPrefix(for countryCode: String) -> String? {
@@ -939,7 +918,7 @@ open class PhoneNumberTextField: NSTextField, NSTextFieldDelegate {
         for i in cursorEnd..<textAsNSString.length {
             let cursorRange = NSRange(location: i, length: 1)
             let candidateNumberAfterCursor: NSString = textAsNSString.substring(with: cursorRange) as NSString
-            if candidateNumberAfterCursor.rangeOfCharacter(from: self.nonNumericSet).location == NSNotFound {
+            if candidateNumberAfterCursor.rangeOfCharacter(from: .nonNumericSet).location == NSNotFound {
                 for j in cursorRange.location..<textAsNSString.length {
                     let candidateCharacter = textAsNSString.substring(with: NSRange(location: j, length: 1))
                     if candidateCharacter == candidateNumberAfterCursor as String {
@@ -974,37 +953,24 @@ open class PhoneNumberTextField: NSTextField, NSTextFieldDelegate {
         return nil
     }
 
-//    open func textField(_ textField: NSTextField, shouldChangeCharactersIn range: NSRange, replacementString string: String) -> Bool {
-//        // This allows for the case when a user autocompletes a phone number:
-//        if range == NSRange(location: 0, length: 0) && string.isBlank {
-//            return true
-//        }
-//
-//        guard let text = text else {
-//            return false
-//        }
-//
-//        // allow delegate to intervene
-//        guard self._delegate?.textField?(textField, shouldChangeCharactersIn: range, replacementString: string) ?? true else {
-//            return false
-//        }
-//        guard self.isPartialFormatterEnabled else {
-//            return true
-//        }
-//
-//        let textAsNSString = text as NSString
+    public func controlTextDidChange(_ obj: Notification) {
+        guard let textField = obj.object as? NSTextField else { return }
+
+        guard self.isPartialFormatterEnabled else { return }
+
+//        let textAsNSString = stringValue as NSString
 //        let changedRange = textAsNSString.substring(with: range) as NSString
 //        let modifiedTextField = textAsNSString.replacingCharacters(in: range, with: string)
 //
 //        let filteredCharacters = modifiedTextField.filter {
-//            String($0).rangeOfCharacter(from: (textField as! PhoneNumberTextField).nonNumericSet) == nil
+//            String($0).rangeOfCharacter(from: .nonNumericSet) == nil
 //        }
 //        let rawNumberString = String(filteredCharacters)
 //
 //        let formattedNationalNumber = self.partialFormatter.formatPartial(rawNumberString as String)
 //        var selectedTextRange: NSRange?
 //
-//        let nonNumericRange = (changedRange.rangeOfCharacter(from: self.nonNumericSet).location != NSNotFound)
+//        let nonNumericRange = (changedRange.rangeOfCharacter(from: .nonNumericSet).location != NSNotFound)
 //        if range.length == 1, string.isEmpty, nonNumericRange {
 //            selectedTextRange = self.selectionRangeForNumberReplacement(textField: textField, formattedText: modifiedTextField)
 //            textField.stringValue = modifiedTextField
@@ -1017,15 +983,13 @@ open class PhoneNumberTextField: NSTextField, NSTextFieldDelegate {
 //            let selectionRange = textField.textRange(from: selectionRangePosition, to: selectionRangePosition)
 //            textField.currentEditor()?.selectedRange = selectionRange
 //        }
-//
-//        // we change the default region to be the one most recently typed
-//        self._defaultRegion = self.currentRegion
-//        self.partialFormatter.defaultRegion = self.currentRegion
-//        self.updateFlag()
-//        self.updatePlaceholder()
-//
-//        return false
-//    }
+
+        // we change the default region to be the one most recently typed
+        self._defaultRegion = self.currentRegion
+        self.partialFormatter.defaultRegion = self.currentRegion
+        self.updateFlag()
+        self.updatePlaceholder()
+    }
 
     // MARK: NSTextfield Delegate
 
@@ -1111,10 +1075,69 @@ open class PhoneNumberTextField: NSTextField, NSTextFieldDelegate {
 //    }
 //}
 
+class PhoneNumberTextFieldFormatter: Foundation.Formatter {
+    let isPartialFormatterEnabled: Bool
+    let partialFormatter: PartialFormatter
+
+    init(isPartialFormatterEnabled: Bool, partialFormatter: PartialFormatter) {
+        self.isPartialFormatterEnabled = isPartialFormatterEnabled
+        self.partialFormatter = partialFormatter
+        super.init()
+    }
+
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
+    override func isPartialStringValid(_ partialString: AutoreleasingUnsafeMutablePointer<NSString>, proposedSelectedRange: NSRangePointer?,
+                                       originalString string: String, originalSelectedRange range: NSRange,
+                                       errorDescription error: AutoreleasingUnsafeMutablePointer<NSString?>?) -> Bool {
+        // This allows for the case when a user autocompletes a phone number:
+        if range == NSRange(location: 0, length: 0) && string.isBlank {
+            return true
+        }
+
+        guard self.isPartialFormatterEnabled else {
+            return true
+        }
+
+        guard let proposedSelectedRange = proposedSelectedRange?.pointee else {
+            return false
+        }
+
+        let textAsNSString = string as NSString
+        let changedRange = textAsNSString.substring(with: proposedSelectedRange) as NSString
+        let modifiedTextField = textAsNSString.replacingCharacters(in: proposedSelectedRange, with: partialString.pointee as String)
+
+        let filteredCharacters = modifiedTextField.filter {
+            String($0).rangeOfCharacter(from: .nonNumericSet) == nil
+        }
+        let rawNumberString = String(filteredCharacters)
+
+        let formattedNationalNumber = self.partialFormatter.formatPartial(rawNumberString as String)
+
+        let nonNumericRange = (changedRange.rangeOfCharacter(from: .nonNumericSet).location != NSNotFound)
+        if range.length == 1, string.isEmpty, nonNumericRange {
+            return string == modifiedTextField
+        } else {
+            return string == formattedNationalNumber
+        }
+    }
+}
+#endif
+
 extension String {
-  var isBlank: Bool {
-    return allSatisfy({ $0.isWhitespace })
-  }
+    var isBlank: Bool {
+        return allSatisfy { $0.isWhitespace }
+    }
 }
 
-#endif
+extension CharacterSet {
+    static let nonNumericSet: CharacterSet = {
+        var mutableSet = CharacterSet.decimalDigits.inverted
+        mutableSet.remove(charactersIn: PhoneNumberConstants.plusChars)
+        mutableSet.remove(charactersIn: PhoneNumberConstants.pausesAndWaitsChars)
+        mutableSet.remove(charactersIn: PhoneNumberConstants.operatorChars)
+        return mutableSet
+    }()
+}
