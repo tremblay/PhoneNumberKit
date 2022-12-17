@@ -956,6 +956,8 @@ open class PhoneNumberTextField: NSTextField, NSTextFieldDelegate {
     public func controlTextDidChange(_ obj: Notification) {
         guard let textField = obj.object as? NSTextField else { return }
 
+        self._delegate?.controlTextDidChange?(obj)
+
         guard self.isPartialFormatterEnabled else { return }
 
 //        let textAsNSString = stringValue as NSString
