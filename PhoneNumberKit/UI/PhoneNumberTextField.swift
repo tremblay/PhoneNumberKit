@@ -784,7 +784,7 @@ open class PhoneNumberTextField: NSTextField, NSTextFieldDelegate {
     func setup() {
 //        self.autocorrectionType = .no
         super.delegate = self
-        self.formatter = PhoneNumberTextFieldFormatter(isPartialFormatterEnabled: isPartialFormatterEnabled, partialFormatter: partialFormatter)
+//        self.formatter = PhoneNumberTextFieldFormatter(isPartialFormatterEnabled: isPartialFormatterEnabled, partialFormatter: partialFormatter)
     }
 
     func internationalPrefix(for countryCode: String) -> String? {
