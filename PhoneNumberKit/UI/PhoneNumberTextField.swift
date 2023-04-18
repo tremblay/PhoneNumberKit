@@ -456,10 +456,14 @@ open class PhoneNumberTextField: UITextField, UITextFieldDelegate {
         }
 
         // we change the default region to be the one most recently typed
-        self._defaultRegion = self.currentRegion
-        self.partialFormatter.defaultRegion = self.currentRegion
-        self.updateFlag()
-        self.updatePlaceholder()
+        // but only when the withFlag is true as to not confuse the user who don't see the flag
+        if withFlag == true
+        {
+            self._defaultRegion = self.currentRegion
+            self.partialFormatter.defaultRegion = self.currentRegion
+            self.updateFlag()
+            self.updatePlaceholder()
+        }
 
         return false
     }
@@ -504,6 +508,11 @@ open class PhoneNumberTextField: UITextField, UITextFieldDelegate {
 
     open func textFieldShouldReturn(_ textField: UITextField) -> Bool {
         return self._delegate?.textFieldShouldReturn?(textField) ?? true
+    }
+
+    @available(iOS 13.0, tvOS 13.0, *)
+    open func textFieldDidChangeSelection(_ textField: UITextField) {
+        self._delegate?.textFieldDidChangeSelection?(textField)
     }
 
     private func updateTextFieldDidEndEditing(_ textField: UITextField) {
